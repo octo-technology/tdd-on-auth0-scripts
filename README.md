@@ -1,6 +1,8 @@
 # tdd-on-auth0-scripts
 How to TDD on Auth0 scripts
 
+This repository is a support to this [article](https://blog.octo.com/en/how-to-do-tdd-on-auth0-scripts/)
+
 ## GitHub deployment
 
 The GitHub Deployments [extension](https://auth0.com/docs/extensions/github-deploy) allows you to deploy rules and database connection scripts 
@@ -14,7 +16,7 @@ There is also extensions for [GitLab](https://auth0.com/docs/extensions/gitlab-d
 The problem with the extensions conventions is that the scripts can only contain a function.
 You can't modularize or add an export in the script.
 
-Auth0 offers [several testing strategies](https://auth0.com/docs/support/testing) but not realy for Unit Tests.
+Auth0 offers [several testing strategies](https://auth0.com/docs/support/testing) but not really for Unit Tests.
 
 And I need TDD to express behaviours of my scripts.
 
@@ -23,12 +25,12 @@ And I need TDD to express behaviours of my scripts.
 The solution is to add these lines in your tests :
 
 ```javascript
-  const mockedDependancy = require('some_dependency');
+const mockedDependency = require('some_dependency');
 
-  const fs = require('fs');
-  const scriptSource = fs.readFileSync('<path_of_the_source_script>', 'utf8');
-  const testableScript = new Function('one_dependency', 'return ' + scriptSource + ';');
-  const functionToUseInTests = testableScript(mockedDependancy);
+const fs = require('fs');
+const scriptSource = fs.readFileSync('<path_of_the_source_script>', 'utf8');  // 1.
+const testableScript = new Function('one_dependency', 'return ' + scriptSource + ';'); // 2.
+const functionToUseInTests = testableScript(mockedDependency); // 3.
 ```
 
 These lines :
