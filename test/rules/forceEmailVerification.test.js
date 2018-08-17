@@ -18,10 +18,17 @@ class UnauthorizedError extends Error {
     }
 }
 
+// expose require to underlying script
+var subRequire = function subRequire (library) {
+	var index = library.indexOf('@');
+	var result = require(library.substring(0, index));
+	// TODO check version is actually correct?
+	return result;
+}
+
 const fs = require('fs');
 const forceEmailVerificationSource = fs.readFileSync('rules/forceEmailVerification.js', 'utf8');
-const testableForceEmailVerification = new Function('UnauthorizedError', 'return ' + forceEmailVerificationSource + ';');
-const forceEmailVerification = testableForceEmailVerification(UnauthorizedError);
+const testableForceEmailVerification = new Function('UnauthorizedError', 'require', 'global', 'return ' + forceEmailVerificationSource + ';');
 
 describe('force email verification', function () {
     let user, context, callback;
@@ -35,9 +42,20 @@ describe('force email verification', function () {
     describe('when user email is verified', () => {
         beforeEach(() => {
             user.email_verified = true;
+
+            // populate configuration
+            configuration = {
+                myKey1: "myValue1",
+                myKey2: "myValue2"
+           };
         });
 
         it('should call callback with untouched user and context', function () {
+
+            var global = {myGlobalKey: "myGlobalValue1"};
+
+            var forceEmailVerification = testableForceEmailVerification(UnauthorizedError, subRequire, global);
+
             forceEmailVerification(user, context, callback);
 
             expect(callback).to.have.been.calledWith(null, user, context);
@@ -50,6 +68,10 @@ describe('force email verification', function () {
         });
 
         it('should return unauthorized error to enforce user changing his password', () => {
+            var global = {myGlobalKey: "myGlobalValue2"};
+
+            var forceEmailVerification = testableForceEmailVerification(UnauthorizedError, subRequire, global);
+
             forceEmailVerification(user, context, callback);
 
             const error = callback.getCall(0).args[0];
